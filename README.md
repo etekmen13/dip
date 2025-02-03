@@ -78,4 +78,4 @@ dip [OPTIONS] DEPTH WIDTH HEIGHT FILE1 [FILE2]
   - `DEPTH`: Bit depth (e.g., 8-bit, 16-bit).
   - `WIDTH`/`HEIGHT`: Image dimensions in pixels.
 
-*For spatial transformations (e.g., Translate), additional arguments may be required.*
+*For spatial transformations (e.g., Translate), arguments are requested at runtime*
