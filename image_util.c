@@ -103,8 +103,7 @@ void subtraction(image_t *img, image_t *img2) {
     //   continue;
     //}
     // temp[i] = (short)img->data[i] - (short)img2->data[i];
-    img->data[i] = img->data[i] > img2->data[i] ? img->data[i] - img2->data[i]
-                                                : img2->data[i] - img->data[i];
+    img->data[i] = img->data[i] - img2->data[i];
 
     // printf("%d - %d = %d\n", img->data[i], img2.data[i], temp[i]);
   }
