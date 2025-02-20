@@ -19,7 +19,9 @@ void save_histogram(int *h, int n);
 
 void intensity_slice(image_t *img, int a, int b, int level);
 
-void normalize(short *data, int size, int depth);
+void normalize_short(short *data, int size, int depth);
+
+void normalize_double(double *data, int size, int depth);
 
 void subtraction(image_t *img, image_t *img2);
 
@@ -34,6 +36,6 @@ int *get_histogram(image_t *img);
 unsigned char *read_image(int fd, int size);
 
 void free_image(image_t *img);
-
+int filter(image_t *img, enum FILTER_TYPE type, unsigned int kernel_width);
 double *get_normalized_histogram(const image_t *img);
 #endif

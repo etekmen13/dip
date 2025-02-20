@@ -15,7 +15,7 @@
 #include <unistd.h>
 #define BUFFER_SIZE 1024
 
-#define TRANSFORMATION_MAX 5
+#define TRANSFORMATION_MAX 6
 #define TRANSFORMATION_MIN 1
 #define HELP_MSG                                                               \
   "Example Usage:\n"                                                           \
@@ -42,4 +42,6 @@ enum STR2INT_ERROR str2int(int *i, char const *s);
 ssize_t read_input(char *buf, const char *msg);
 
 void close_fd(int fd);
+
+void sort(unsigned char *arr, unsigned int n);
 #endif

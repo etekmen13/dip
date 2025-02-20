@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     if (errno != 0) {
       fprintf(stderr, "failed to open input file 2. errno: %s\n",
               strerror(errno));
-      return 1;
+      return 0;
     }
   }
   int size = arguments.width * arguments.height * (arguments.bit_depth / 8.0f);
@@ -115,13 +115,37 @@ int main(int argc, char **argv) {
       return 1;
     }
     intensity_slice(&img1, a, b, level);
-  }
+  } break;
   case 5: {
     if (input_fd2 == -1)
       histogram_spec(&img1, NULL);
     else
       histogram_spec(&img1, get_normalized_histogram(&img2));
-  }
+  } break;
+  case 6: {
+    read_input(buf, "Enter Filter Type:\n1. Box\n2. Gaussian\n3. Median\n4. "
+                    "Laplacian4\n5. Laplacian8\n");
+    int type;
+    str2int(&type, buf);
+    if (type < 1 || type > 5) {
+      printf("Invalid type.\n");
+      return 1;
+    }
+    enum FILTER_TYPE t = --type;
+    if (t == LAPLACE4 || t == LAPLACE8) {
+
+      filter(&img1, t, 3);
+      break;
+    }
+    read_input(buf, "Enter Kernel Width: (Must Be Odd):\n");
+    int kernel_width;
+    str2int(&kernel_width, buf);
+    if (kernel_width < 0 || kernel_width % 2 == 0) {
+      printf("Invalid Kernel Width.\n");
+      return 1;
+    }
+    filter(&img1, t, kernel_width);
+  } break;
   }
   save_image(&img1, arguments.output_file);
 

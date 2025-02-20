@@ -76,7 +76,7 @@ void normalize_short(short *data, int size, int depth) {
   for (int i = 0; i < size; i++) {
     min = data[i] < min ? data[i] : min;
   }
-  printf("%d\n", min);
+  printf("min: %d\n", min);
   for (int i = 0; i < size; i++) {
     data[i] -= min;
   }
@@ -87,7 +87,6 @@ void normalize_short(short *data, int size, int depth) {
   printf("max: %d\n", max);
   for (int i = 0; i < size; i++) {
     data[i] = (depth * data[i]) / max;
-    printf("%d\n", data[i]);
   }
 }
 void normalize_double(double *data, int size, int depth) {
@@ -95,7 +94,7 @@ void normalize_double(double *data, int size, int depth) {
   for (int i = 0; i < size; i++) {
     min = data[i] < min ? data[i] : min;
   }
-  printf("%f\n", min);
+  printf("min: %f\n", min);
   for (int i = 0; i < size; i++) {
     data[i] -= min;
   }
@@ -106,7 +105,6 @@ void normalize_double(double *data, int size, int depth) {
   printf("max: %f\n", max);
   for (int i = 0; i < size; i++) {
     data[i] = (depth * data[i]) / max;
-    printf("%f\n", data[i]);
   }
 }
 
@@ -126,7 +124,7 @@ void subtraction(image_t *img, image_t *img2) {
   for (int i = 0; i < img->size; i++) {
     temp[i] = (short)img->data[i] - (short)img2->data[i];
   }
-  normalize(temp, img->size, 1 << img->bit_depth);
+  normalize_short(temp, img->size, 1 << img->bit_depth);
   for (int i = 0; i < img->size; ++i) {
     img->data[i] = temp[i];
   }
@@ -199,34 +197,60 @@ void set_kernel(unsigned int kernel_width,
   switch (type) {
   case BOX: {
     double weight = 1.0 / (kernel_width * kernel_width);
-    memset(kernel, weight, kernel_width * kernel_width);
+    printf("Kernel: ");
+    for (int i = 0; i < kernel_width; ++i) {
+      for (int j = 0; j < kernel_width; ++j) {
+        kernel[i][j] = weight;
+        printf("%f, ", kernel[i][j]);
+      }
+    }
+    printf("\n");
   } break;
   case GAUSSIAN: {
     for (int i = -h_width; i <= h_width; ++i) {
       for (int j = -h_width; j <= h_width; ++j) {
-        kernel[i + h_width][j + h_width] = gaussian(j, i, 1.0);
+        kernel[i + h_width][j + h_width] = gaussian(j, i, 5.0);
       }
     }
   } break;
   case LAPLACE4: {
-    memset(kernel, 0, kernel_width * kernel_width);
+    memset(kernel, 0, kernel_width * kernel_width * sizeof(double));
     for (int i = 0; i < kernel_width; ++i) {
-      kernel[i][h_width] = -1;
-      kernel[h_width][i] = -1;
+      kernel[i][h_width] = 1;
+      kernel[h_width][i] = 1;
     }
-    kernel[h_width][h_width] = kernel_width * kernel_width - 5;
+    kernel[h_width][h_width] = -4;
+    printf("Kernel: ");
+    for (int i = 0; i < kernel_width; ++i) {
+      for (int j = 0; j < kernel_width; ++j) {
+        printf("%f, ", kernel[i][j]);
+      }
+    }
+    printf("\n");
+
   } break;
   case LAPLACE8: {
-    memset(kernel, -1, kernel_width * kernel_width);
-    kernel[h_width][h_width] = kernel_width * kernel_width - 1;
+    printf("Kernel: ");
+    for (int i = 0; i < kernel_width; ++i) {
+      for (int j = 0; j < kernel_width; ++j) {
+        kernel[j][i] = 1;
+      }
+    }
+    kernel[h_width][h_width] = -8;
+    for (int i = 0; i < kernel_width; ++i) {
+      for (int j = 0; j < kernel_width; ++j) {
+        printf("%f, ", kernel[i][j]);
+      }
+    }
+    printf("\n");
+
   } break;
   default:
     break;
   }
 }
-void apply_kernel(int idx, image_t *img, unsigned int kernel_width,
+void apply_kernel(image_t *img, unsigned int kernel_width,
                   double kernel[kernel_width][kernel_width]) {
-
   int h_width = kernel_width / 2;
 
   double *temp = malloc(img->size * sizeof(double));
@@ -243,32 +267,66 @@ void apply_kernel(int idx, image_t *img, unsigned int kernel_width,
                  kernel[y - i + h_width][x - j + h_width];
         }
       }
+
       temp[idx] = res;
     }
   }
-  normalize_double(temp, img->size, img->bit_depth);
+
+  for (int i = 0; i < img->size; ++i) {
+    // printf("%f, %d\n", temp[i], img->data[i]);
+  }
+  normalize_double(temp, img->size, (1 << img->bit_depth));
   for (int i = 0; i < img->size; ++i) {
     img->data[i] = (unsigned char)temp[i];
   }
   free(temp);
 }
+
 void apply_median(image_t *img, unsigned int kernel_width) {
+  int kwidth2 = kernel_width * kernel_width;
+  int h_width2 = kwidth2 / 2;
   int h_width = kernel_width / 2;
-  for (int i = 0; i < img->size; ++i) {
-    unsigned char arr[kernel_width * kernel_width];
-    for (int j = 0; j < kernel_width * kernel_width; ++j) {
-      arr[j] = img->data[i + j];
+  int border = h_width * (img->width + 1);
+  unsigned char *temp = malloc(img->size);
+  for (int i = border; i < img->size - border; ++i) {
+    int x0 = i % img->width;
+    int y0 = i / img->width;
+
+    if (x0 - h_width < 0 || x0 + h_width >= img->width)
+      continue;
+    if (y0 - h_width < 0 || y0 + h_width >= img->width)
+      continue;
+
+    unsigned char arr[kwidth2];
+
+    int k = 0;
+
+    for (int x = -h_width; x <= h_width; ++x) {
+      for (int y = -h_width; y <= h_width; ++y) {
+        int j = i + x + y * img->width;
+        arr[k++] = img->data[j];
+      }
     }
+    sort(arr, kwidth2);
+    temp[i] = arr[h_width2];
   }
+  for (int i = 0; i < img->size; ++i) {
+    img->data[i] = temp[i];
+  }
+  free(temp);
 }
 int filter(image_t *img, enum FILTER_TYPE type, unsigned int kernel_width) {
   if (kernel_width % 2 == 0) {
     fprintf(stderr, "kernel dimensions must be odd.\n");
-    return -1;
+    return 1;
+  }
+  if (type == MEDIAN) {
+    apply_median(img, kernel_width);
+    return 0;
   }
   double kernel[kernel_width][kernel_width];
   set_kernel(kernel_width, kernel, type);
-
+  apply_kernel(img, kernel_width, kernel);
   return 0;
 }
 double *get_normalized_histogram(const image_t *img) {
