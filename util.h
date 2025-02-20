@@ -1,10 +1,12 @@
 #ifndef UTIL_H
 #define UTIL_H
-
+#define _USE_MATH_DEFINES
 #include <argp.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <float.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +15,7 @@
 #include <unistd.h>
 #define BUFFER_SIZE 1024
 
-#define TRANSFORMATION_MAX 4
+#define TRANSFORMATION_MAX 5
 #define TRANSFORMATION_MIN 1
 #define HELP_MSG                                                               \
   "Example Usage:\n"                                                           \
@@ -28,9 +30,10 @@
   "1: Subtract (Requires 2 Images)\n"                                          \
   "2: Negate\n"                                                                \
   "3: Translate\n"                                                             \
-  "4: Intensity Slice\n"
+  "4: Intensity Slice\n"                                                       \
+  "5: Histogram EQ/Specialization\n"
 
-#define VERSION "dip v1.0.0\n"
+#define VERSION "dip v1.0.1\n"
 
 enum STR2INT_ERROR { SUCCESS, OVERFLOW, UNDERFLOW, INCONVERTIBLE };
 

@@ -116,6 +116,12 @@ int main(int argc, char **argv) {
     }
     intensity_slice(&img1, a, b, level);
   }
+  case 5: {
+    if (input_fd2 == -1)
+      histogram_spec(&img1, NULL);
+    else
+      histogram_spec(&img1, get_normalized_histogram(&img2));
+  }
   }
   save_image(&img1, arguments.output_file);
 

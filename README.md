@@ -52,7 +52,7 @@ dip [OPTIONS] DEPTH WIDTH HEIGHT FILE1 [FILE2]
 | `2`  | **Negate**       | Invert pixel intensities             | 1 RAW file     |
 | `3`  | **Translate**    | Shift image spatially                | 1 RAW file     |
 | `4`  | **Intensity Slice** | Extract intensity range           | 1 RAW file     |
-
+| `5`  | **Histogram EQ/Specialization** | 1 File: Equalization. 2 Files: Specifies `FILE1` histogram to target `FILE2` histogram | 1 or 2 RAW files |
 ---
 
 ## Examples
@@ -69,7 +69,15 @@ dip [OPTIONS] DEPTH WIDTH HEIGHT FILE1 [FILE2]
    ```bash
    ./dip -t 2 -o negated.raw 8 640 480 input.raw
    ```
-
+3. **Histogram Equalization/Specification**
+    * Histogram Equalization (one file):
+    ```bash
+    ./dip -t 5 -o equalized.raw 8 640 480 input.raw
+    ```
+    * Histogram Specialization (two files):
+    ```bash
+    ./dip -t 5 -o specified.raw 8 640 480 current.raw target.raw
+    ```
 ---
 
 ## Input Format
